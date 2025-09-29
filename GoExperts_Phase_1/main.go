@@ -1,7 +1,7 @@
 package main
 
 import (
-	"GoProject/1_module/payments"
+	"GoProject/1_moduleFoundation/payments"
 	"fmt"
 
 	"github.com/google/uuid"

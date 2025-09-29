@@ -1,7 +1,7 @@
 package payments
 
 import (
-	"GoProject/1_module/payments/math"
+	"GoProject/1_moduleFoundation/payments/math"
 	"fmt"
 )
 

@@ -1,7 +1,7 @@
 package main
 
 import (
-	"GoProject/1_module/5_cep-handler/getCep"
+	"GoProject/1_moduleFoundation/5_cep-handler/getCep"
 	"encoding/json"
 	"net/http"
 )
