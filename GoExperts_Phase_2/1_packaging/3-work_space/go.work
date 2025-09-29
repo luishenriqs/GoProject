@@ -1,0 +1,20 @@
+go 1.24.3
+
+use (
+	./math
+	./sistema
+)
+
+// Eu tenho dois sistemas distintos, sistema e math, cada um com o seu go.mod
+
+// Ao criar um "workspace" (go.work) com o comando: go work init ./math ./sistema,
+// os dois pacotes passam a conversar dentro do workspace
+
+// Dessa forma sistema pode usar os métodos de math, mesmo sem ter esses pacotes
+// importados dentro do seu go.mod
+
+// Imagine o cenário em que math é apenas local, não está no github, como que o
+// pacote "sistema" poderia encontrá-lo sem usar o "replace" com path relativo?
+// Resposta: Criando um workspace
+
+// Comando exemplo para criar um workspace: go work init ./math ./sistema
