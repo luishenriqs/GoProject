@@ -13,15 +13,15 @@ func TestNewUser_Success(t *testing.T) {
 	plain := "s3cr3t-Strong!"
 
 	u, err := NewUser(name, rawEmail, plain)
-	if err != nil {
+	if err != nil { // Se erro diferente de vazio
 		t.Fatalf("expected success, got error: %v", err)
 	}
-	if u == nil {
+	if u == nil { // Se user igual a vazio
 		t.Fatalf("expected non-nil user")
 	}
 
 	// ID deve ser gerado (uuid != uuid.Nil)
-	if u.ID == uuid.Nil {
+	if u.ID == uuid.Nil { // Se ID igual a vazio
 		t.Fatalf("expected non-nil uuid, got Nil")
 	}
 
@@ -35,13 +35,13 @@ func TestNewUser_Success(t *testing.T) {
 	if u.Password == "" {
 		t.Fatalf("expected hashed password, got empty string")
 	}
-	if u.Password == plain {
+	if u.Password == plain { // Garante que senha foi criptografada
 		t.Fatalf("expected hashed password different from plain text")
 	}
-	if ok := u.CheckPassword(plain); !ok {
+	if ok := u.CheckPassword(plain); !ok { // Verifica se senha correta
 		t.Fatalf("expected CheckPassword to succeed for the original plain password")
 	}
-	if ok := u.CheckPassword("wrong-password"); ok {
+	if ok := u.CheckPassword("wrong-password"); ok { // Garante falha para senha incorretas
 		t.Fatalf("expected CheckPassword to fail for a wrong password")
 	}
 }
