@@ -1,0 +1,8 @@
+# Binaries / db / editor
+bin/
+*.db
+cotacao.txt
+.DS_Store
+.vscode/
+.idea/
+
