@@ -17,7 +17,7 @@ type ProductInterface interface {
 	Create(product *appentity.Product) error
 	FindByID(id pkgentity.ID) (*appentity.Product, error)
 	// FindAll retorna a lista paginada e o total de registros (para paginação).
-	FindAll(page, limit int) ([]appentity.Product, int64, error)
+	FindAll(page, limit int, sort string) ([]appentity.Product, int64, error)
 	Update(product *appentity.Product) error
 	Delete(id pkgentity.ID) error
 }
