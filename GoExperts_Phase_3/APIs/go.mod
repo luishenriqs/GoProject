@@ -3,21 +3,19 @@ module github.com/luishenriqs/GoProject/GoExperts_Phase_3/APIs
 go 1.24.3
 
 require (
+	github.com/glebarez/sqlite v1.11.0
 	github.com/go-chi/jwtauth v1.2.0
 	github.com/google/uuid v1.6.0
 	github.com/spf13/viper v1.21.0
 	golang.org/x/crypto v0.0.0-20201221181555-eec23a3978ad
-	gorm.io/driver/sqlite v1.6.0
 )
 
 require (
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/glebarez/go-sqlite v1.21.2 // indirect
-	github.com/glebarez/sqlite v1.11.0 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
 	github.com/mattn/go-isatty v0.0.17 // indirect
-	github.com/mattn/go-sqlite3 v1.14.22 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
 	modernc.org/libc v1.22.5 // indirect
 	modernc.org/mathutil v1.5.0 // indirect

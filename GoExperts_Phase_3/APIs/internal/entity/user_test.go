@@ -8,8 +8,8 @@ import (
 )
 
 func TestNewUser_Success(t *testing.T) {
-	name := "Luís"
-	rawEmail := "  TEST.User+tag@Example.COM  "
+	name := "John"
+	rawEmail := "  JOHN_doe@Email.COM  "
 	plain := "s3cr3t-Strong!"
 
 	u, err := NewUser(name, rawEmail, plain)
@@ -26,7 +26,7 @@ func TestNewUser_Success(t *testing.T) {
 	}
 
 	// Email deve ser normalizado (trim + lower-case)
-	wantEmail := "test.user+tag@example.com"
+	wantEmail := "john_doe@email.com"
 	if u.Email != wantEmail {
 		t.Fatalf("expected email %q, got %q", wantEmail, u.Email)
 	}

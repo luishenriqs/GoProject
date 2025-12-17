@@ -19,7 +19,7 @@ var (
 // User representa o agregado de usuário.
 // Campo Password armazena o hash bcrypt e é omitido do JSON.
 type User struct {
-	ID       entity.ID `json:"id"`
+	ID       entity.ID `json:"id"` // ID é criado por um pacote na pasta pkg/entity
 	Name     string    `json:"name"`
 	Email    string    `json:"email" gorm:"uniqueIndex"` // índice único
 	Password string    `json:"-"`                        // guarda o hash bcrypt; nunca serializar
@@ -30,11 +30,12 @@ type User struct {
 func NewUser(name, email, plainPassword string) (*User, error) {
 	name = strings.TrimSpace(name)
 	email = strings.TrimSpace(strings.ToLower(email))
+	plainPassword = strings.TrimSpace(plainPassword)
 
 	if !isValidEmail(email) {
 		return nil, ErrInvalidEmail
 	}
-	if strings.TrimSpace(plainPassword) == "" {
+	if plainPassword == "" { // No momento só verifica se não é vazio
 		return nil, ErrWeakPassword
 	}
 
@@ -52,7 +53,8 @@ func NewUser(name, email, plainPassword string) (*User, error) {
 }
 
 func (u *User) SetPassword(plainPassword string) error {
-	if strings.TrimSpace(plainPassword) == "" {
+	plainPassword = strings.TrimSpace(plainPassword)
+	if plainPassword == "" { // No momento só verifica se não é vazio
 		return ErrWeakPassword
 	}
 	hash, err := hashPassword(plainPassword)

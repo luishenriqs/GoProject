@@ -14,10 +14,12 @@ type ProductDB struct {
 	DB *gorm.DB
 }
 
+// Injeta a conexão do GORM (db) e retorna o repositório pronto para uso.
 func NewProductDB(db *gorm.DB) *ProductDB {
 	return &ProductDB{DB: db}
 }
 
+// Create persiste um novo produto.
 func (r *ProductDB) Create(product *appentity.Product) error {
 	return r.DB.Create(product).Error
 }
@@ -30,7 +32,7 @@ func (r *ProductDB) FindByID(id pkgentity.ID) (*appentity.Product, error) {
 	return &p, nil
 }
 
-func (r *ProductDB) FindAll(page, limit int) ([]appentity.Product, int64, error) {
+func (r *ProductDB) FindAll(page, limit int, sort string) ([]appentity.Product, int64, error) {
 	var (
 		items []appentity.Product
 		total int64
@@ -38,16 +40,20 @@ func (r *ProductDB) FindAll(page, limit int) ([]appentity.Product, int64, error)
 	if err := r.DB.Model(&appentity.Product{}).Count(&total).Error; err != nil {
 		return nil, 0, err
 	}
-	if limit <= 0 {
-		limit = 10
-	}
 	if page <= 0 {
 		page = 1
 	}
+	if limit <= 0 {
+		limit = 10
+	}
 	offset := (page - 1) * limit
 
+	if sort != "" && sort != "asc" && sort != "desc" {
+		sort = "asc"
+	}
+
 	if err := r.DB.
-		Order("created_at ASC").
+		Order("created_at " + sort).
 		Limit(limit).
 		Offset(offset).
 		Find(&items).Error; err != nil {

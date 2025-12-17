@@ -12,6 +12,12 @@ import (
 	"gorm.io/gorm/logger"
 )
 
+/*
+- abre um SQLite :memory: com GORM (ou seja, banco em RAM, isolado por teste)
+- configura o logger como Silent para não poluir o output
+- executa AutoMigrate(&appentity.Product{}) para criar a tabela/estrutura necessária antes de rodar os testes
+- retorna o *gorm.DB pronto pra uso
+*/
 func newProductTestDB(t *testing.T) *gorm.DB {
 	t.Helper()
 
@@ -28,13 +34,16 @@ func newProductTestDB(t *testing.T) *gorm.DB {
 }
 
 func TestProductDB_Create_And_FindByID(t *testing.T) {
-	db := newProductTestDB(t)
-	repo := NewProductDB(db)
+	db := newProductTestDB(t) // → cria o banco
+	repo := NewProductDB(db)  // → cria o repositório apontando para esse banco (injeção de dependência)
 
+	// Cria um objeto do novo produto
 	p, err := appentity.NewProduct("Notebook", 4999.90)
 	if err != nil {
 		t.Fatalf("NewProduct failed: %v", err)
 	}
+
+	// Persiste o novo produto no banco
 	if err := repo.Create(p); err != nil {
 		t.Fatalf("Create failed: %v", err)
 	}
@@ -64,7 +73,7 @@ func TestProductDB_FindAll_Pagination(t *testing.T) {
 		time.Sleep(2 * time.Millisecond)
 	}
 
-	items, total, err := repo.FindAll(2, 2)
+	items, total, err := repo.FindAll(2, 2, "asc")
 	if err != nil {
 		t.Fatalf("FindAll failed: %v", err)
 	}
@@ -73,7 +82,7 @@ func TestProductDB_FindAll_Pagination(t *testing.T) {
 			total, len(items), items[0].Name, items[1].Name)
 	}
 
-	items, total, err = repo.FindAll(3, 2)
+	items, total, err = repo.FindAll(3, 2, "asc")
 	if err != nil {
 		t.Fatalf("FindAll failed: %v", err)
 	}

@@ -11,7 +11,14 @@ import (
 	"gorm.io/gorm/logger"
 )
 
+/*
+- abre um SQLite :memory: com GORM (ou seja, banco em RAM, isolado por teste)
+- configura o logger como Silent para não poluir o output
+- executa AutoMigrate(&appentity.User{}) para criar a tabela/estrutura necessária antes de rodar os testes
+- retorna o *gorm.DB pronto pra uso
+*/
 func newTestDB(t *testing.T) *gorm.DB {
+
 	t.Helper()
 
 	db, err := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{
@@ -28,19 +35,21 @@ func newTestDB(t *testing.T) *gorm.DB {
 }
 
 func TestUserRepository_Create_And_FindByEmail_Success(t *testing.T) {
-	db := newTestDB(t)
-	repo := NewUser(db)
+	db := newTestDB(t)    // → cria o banco
+	repo := NewUserDb(db) // → cria o repositório apontando para esse banco (injeção de dependência)
 
-	u, err := appentity.NewUser("Luís", "  TEST.User+tag@Example.COM ", "s3cr3t-Strong!")
+	// Cria um objeto do novo usuário
+	u, err := appentity.NewUser("John", "  JOHN_doe@Email.COM  ", "s3cr3t-Strong!")
 	if err != nil {
 		t.Fatalf("NewUser failed: %v", err)
 	}
 
+	// Persiste o novo usuário no banco
 	if err := repo.Create(u); err != nil {
 		t.Fatalf("Create failed: %v", err)
 	}
 
-	found, err := repo.FindByEmail("test.user+tag@example.com")
+	found, err := repo.FindByEmail("john_doe@email.com")
 	if err != nil {
 		t.Fatalf("FindByEmail failed: %v", err)
 	}
@@ -57,7 +66,9 @@ func TestUserRepository_Create_And_FindByEmail_Success(t *testing.T) {
 
 func TestUserRepository_FindByEmail_NotFound(t *testing.T) {
 	db := newTestDB(t)
-	repo := NewUser(db)
+	repo := NewUserDb(db)
+
+	// Pula as etapas de criação do usuário ...
 
 	_, err := repo.FindByEmail("nobody@example.com")
 	if err == nil {
