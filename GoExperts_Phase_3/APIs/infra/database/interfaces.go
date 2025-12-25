@@ -1,4 +1,3 @@
-// internal/infra/database/interfaces.go
 package database
 
 import (
@@ -6,17 +5,24 @@ import (
 	pkgentity "github.com/luishenriqs/GoProject/GoExperts_Phase_3/APIs/pkg/entity"
 )
 
-// UserInterface define o contrato mínimo para persistência/consulta de usuários.
+// UserInterface define o contrato de persistência para User.
+// Nesta etapa, expandimos apenas o necessário para suportar /users/me:
+// - FindByID
+// - Update (sem criar se não existir)
+// - Delete
 type UserInterface interface {
 	Create(user *appentity.User) error
 	FindByEmail(email string) (*appentity.User, error)
+
+	FindByID(id pkgentity.ID) (*appentity.User, error)
+	Update(user *appentity.User) error
+	Delete(id pkgentity.ID) error
 }
 
-// ProductInterface define operações de CRUD e listagem paginada.
+// ProductInterface permanece inalterada nesta etapa.
 type ProductInterface interface {
 	Create(product *appentity.Product) error
 	FindByID(id pkgentity.ID) (*appentity.Product, error)
-	// FindAll retorna a lista paginada e o total de registros (para paginação).
 	FindAll(page, limit int, sort string) ([]appentity.Product, int64, error)
 	Update(product *appentity.Product) error
 	Delete(id pkgentity.ID) error

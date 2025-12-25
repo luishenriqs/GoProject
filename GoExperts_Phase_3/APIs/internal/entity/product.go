@@ -25,8 +25,27 @@ type Product struct {
 	CreatedAt time.Time    `json:"created_at"`
 }
 
-// NewProduct cria um novo produto atribuindo ID e CreatedAt automaticamente.
-// Mantido sem validação automática para não mudar comportamento sem autorização.
+/*
+NewProduct cria uma nova instância de Product preenchendo os campos essenciais,
+definindo CreatedAt em UTC e executando a validação do objeto antes de retorná-lo.
+
+Fluxo:
+ 1. Instancia um Product com:
+    - ID gerado via pkgentity.NewId()
+    - Name e Price conforme parâmetros recebidos
+    - CreatedAt definido como time.Now().UTC()
+ 2. Executa product.validate().
+    - Se houver erro, retorna (nil, err).
+ 3. Retorna o product criado em caso de sucesso.
+
+Parâmetros:
+  - name: nome do produto.
+  - price: preço do produto.
+
+Retorno:
+  - (*Product, nil) em caso de sucesso.
+  - (nil, err) se a validação do produto falhar.
+*/
 func NewProduct(name string, price float64) (*Product, error) {
 	product := &Product{
 		ID:        pkgentity.NewId(),
@@ -43,10 +62,28 @@ func NewProduct(name string, price float64) (*Product, error) {
 	return product, nil
 }
 
-// validate executa validações de domínio para o Product.
-// Regras:
-// - id, name e price são required
-// - id e price precisam ser válidos (id != uuid.Nil, price > 0)
+/*
+validate valida a integridade mínima de um Product, garantindo presença e consistência
+dos campos essenciais (ID, Name e Price).
+
+Fluxo:
+ 1. Se o receiver for nil, retorna ErrRequired.
+ 2. Valida o ID:
+    - Se p.ID for uuid.Nil (zero-value), retorna ErrInvalidID.
+ 3. Valida o Name:
+    - Se strings.TrimSpace(p.Name) resultar em string vazia, retorna ErrRequired.
+ 4. Valida o Price:
+    - Se p.Price <= 0:
+    - Se p.Price == 0, retorna ErrRequired.
+    - Se p.Price < 0, retorna ErrInvalidPrice.
+ 5. Retorna nil se todas as validações passarem.
+
+Retorno:
+  - nil se o Product estiver válido.
+  - ErrRequired se o Product for nil, se Name estiver vazio, ou se Price for zero.
+  - ErrInvalidID se o ID estiver ausente/inválido (uuid.Nil).
+  - ErrInvalidPrice se o Price for negativo.
+*/
 func (p *Product) validate() error {
 	if p == nil {
 		return ErrRequired

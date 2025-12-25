@@ -1,36 +1,88 @@
-// internal/infra/database/user_db.go
 package database
 
 import (
 	appentity "github.com/luishenriqs/GoProject/GoExperts_Phase_3/APIs/internal/entity"
+	pkgentity "github.com/luishenriqs/GoProject/GoExperts_Phase_3/APIs/pkg/entity"
 	"gorm.io/gorm"
 )
 
-// Garantia de conformidade com a interface em tempo de compilação.
-// Se algum método exigido pela interface faltar/assinar diferente, o projeto não compila.
-var _ UserInterface = (*User)(nil)
+// TO DO - CRIAR OS HEADERS DAS FUNÇÕES DESTA CAMADA
+// TO DO - CRIAR OS HEADERS DAS FUNÇÕES DESTA CAMADA
+// TO DO - CRIAR OS HEADERS DAS FUNÇÕES DESTA CAMADA
+// TO DO - CRIAR OS HEADERS DAS FUNÇÕES DESTA CAMADA
+// TO DO - CRIAR OS HEADERS DAS FUNÇÕES DESTA CAMADA
+// TO DO - CRIAR OS HEADERS DAS FUNÇÕES DESTA CAMADA
+// TO DO - CRIAR OS HEADERS DAS FUNÇÕES DESTA CAMADA
+// TO DO - CRIAR OS HEADERS DAS FUNÇÕES DESTA CAMADA
+// TO DO - CRIAR OS HEADERS DAS FUNÇÕES DESTA CAMADA
+// TO DO - CRIAR OS HEADERS DAS FUNÇÕES DESTA CAMADA
+// TO DO - CRIAR OS HEADERS DAS FUNÇÕES DESTA CAMADA
 
+// User é o repositório GORM de User.
+// (Mantido exatamente o nome/estrutura do estado atual.)
 type User struct {
 	DB *gorm.DB
 }
 
-// Injeta a conexão do GORM (db) e retorna o repositório pronto para uso.
 func NewUserDb(db *gorm.DB) *User {
 	return &User{DB: db}
 }
 
-// Create persiste um novo usuário.
-// Observação: espera receber appentity.User já validado/normalizado.
-func (r *User) Create(user *appentity.User) error {
-	return r.DB.Create(user).Error
+var _ UserInterface = (*User)(nil)
+
+func (u *User) Create(user *appentity.User) error {
+	return u.DB.Create(user).Error
 }
 
-// FindByEmail retorna o usuário pelo e-mail.
-// Retorna erro do GORM; use errors.Is(err, gorm.ErrRecordNotFound) para testar "não encontrado".
-func (r *User) FindByEmail(email string) (*appentity.User, error) {
-	var u appentity.User
-	if err := r.DB.Where("email = ?", email).First(&u).Error; err != nil { // Erro diferente de vazio?
-		return nil, err // Retorna o erro
+func (u *User) FindByEmail(email string) (*appentity.User, error) {
+	var user appentity.User
+	err := u.DB.Where("email = ?", email).First(&user).Error
+	if err != nil {
+		return nil, err
 	}
-	return &u, nil // Retorna o usuário
+	return &user, nil
+}
+
+// FindByID busca um usuário por ID.
+func (u *User) FindByID(id pkgentity.ID) (*appentity.User, error) {
+	var user appentity.User
+	err := u.DB.First(&user, "id = ?", id).Error
+	if err != nil {
+		return nil, err
+	}
+	return &user, nil
+}
+
+// Update atualiza um usuário existente.
+// Semântica: NÃO cria registro se não existir (igual ao ProductDB.Update).
+func (u *User) Update(user *appentity.User) error {
+	result := u.DB.Model(&appentity.User{}).
+		Where("id = ?", user.ID).
+		Updates(user)
+
+	if result.Error != nil {
+		return result.Error
+	}
+
+	if result.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
+	}
+
+	return nil
+}
+
+// Delete remove um usuário por ID.
+// Para manter previsibilidade de CRUD, retorna ErrRecordNotFound quando não existir.
+func (u *User) Delete(id pkgentity.ID) error {
+	result := u.DB.Delete(&appentity.User{}, "id = ?", id)
+
+	if result.Error != nil {
+		return result.Error
+	}
+
+	if result.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
+	}
+
+	return nil
 }
