@@ -1,0 +1,23 @@
+meta {
+  name: Update Product
+  type: http
+  seq: 4
+}
+
+put {
+  url: {{BASE_URL}}/products/93ace488-f90b-424b-908e-d471834fecde
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "name": "New Keyboard",
+    "price": 150
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

@@ -1,0 +1,9 @@
+{
+  "version": "1",
+  "name": "Go API – Local",
+  "type": "collection",
+  "ignore": [
+    "node_modules",
+    ".git"
+  ]
+}

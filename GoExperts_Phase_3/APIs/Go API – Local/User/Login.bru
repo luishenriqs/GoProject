@@ -1,0 +1,36 @@
+meta {
+  name: Login
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{BASE_URL}}/login
+  body: json
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "email": "luis@example.com",
+    "password": "123456"
+  }
+}
+
+script:post-response {
+  const token = res?.body?.access_token;
+  
+  if (token) {
+    bru.setEnvVar("TOKEN", token);
+  }
+  
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}
