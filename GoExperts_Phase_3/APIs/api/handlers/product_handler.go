@@ -56,6 +56,19 @@ Respostas HTTP:
 Dependências:
   - middleware.UserIDFromContext para validar autenticação via contexto.
 */
+// CreateProduct godoc
+// @Summary      Cria um produto
+// @Description  Cria um produto (rota protegida).
+// @Tags         Products
+// @Accept       json
+// @Produce      json
+// @Param        body body dto.CreateProductInput true "Dados do produto"
+// @Success      201 {object} entity.Product
+// @Failure      400 {string} string
+// @Failure      401 {string} string
+// @Failure      500 {string} string
+// @Security     BearerAuth
+// @Router       /products [post]
 func (h *ProductHandler) CreateProduct(w http.ResponseWriter, r *http.Request) {
 	if _, ok := middleware.UserIDFromContext(r.Context()); !ok {
 		w.WriteHeader(http.StatusUnauthorized)
@@ -117,6 +130,19 @@ Dependências:
   - middleware.UserIDFromContext para validar autenticação via contexto.
   - strconv.Atoi para parsing de page e limit.
 */
+// ListProducts godoc
+// @Summary      Lista produtos (paginado)
+// @Description  Lista produtos com paginação e ordenação via query string.
+// @Tags         Products
+// @Produce      json
+// @Param        page  query int    false "Número da página"
+// @Param        limit query int    false "Itens por página"
+// @Param        sort  query string false "Ordenação (asc|desc)"
+// @Success      200 {object} map[string]interface{}
+// @Failure      401 {string} string
+// @Failure      500 {string} string
+// @Security     BearerAuth
+// @Router       /products [get]
 func (h *ProductHandler) ListProducts(w http.ResponseWriter, r *http.Request) {
 	if _, ok := middleware.UserIDFromContext(r.Context()); !ok {
 		w.WriteHeader(http.StatusUnauthorized)
@@ -175,6 +201,19 @@ Observação:
   - A extração do ID é feita via manipulação direta de r.URL.Path (TrimPrefix) e validação simples
     para rejeitar paths com segmentos adicionais.
 */
+// GetProductByID godoc
+// @Summary      Busca produto por ID
+// @Description  Retorna um produto pelo ID (rota protegida).
+// @Tags         Products
+// @Produce      json
+// @Param        id   path   string true "ID do produto"
+// @Success      200  {object} entity.Product
+// @Failure      400  {string} string
+// @Failure      401  {string} string
+// @Failure      404  {string} string
+// @Failure      500  {string} string
+// @Security     BearerAuth
+// @Router       /products/{id} [get]
 func (h *ProductHandler) GetProductByID(w http.ResponseWriter, r *http.Request) {
 	if _, ok := middleware.UserIDFromContext(r.Context()); !ok {
 		w.WriteHeader(http.StatusUnauthorized)
@@ -244,6 +283,21 @@ Observação:
   - A extração do ID é feita via manipulação direta de r.URL.Path (TrimPrefix) e validação simples
     para rejeitar paths com segmentos adicionais.
 */
+// UpdateProduct godoc
+// @Summary      Atualiza um produto
+// @Description  Atualiza parcialmente um produto pelo ID (rota protegida).
+// @Tags         Products
+// @Accept       json
+// @Produce      json
+// @Param        id   path   string true "ID do produto"
+// @Param        body body   dto.UpdateProductInput true "Campos para atualização"
+// @Success      200  {object} entity.Product
+// @Failure      400  {string} string
+// @Failure      401  {string} string
+// @Failure      404  {string} string
+// @Failure      500  {string} string
+// @Security     BearerAuth
+// @Router       /products/{id} [put]
 func (h *ProductHandler) UpdateProduct(w http.ResponseWriter, r *http.Request) {
 	if _, ok := middleware.UserIDFromContext(r.Context()); !ok {
 		w.WriteHeader(http.StatusUnauthorized)
@@ -318,6 +372,18 @@ Observação:
   - A extração do ID é feita via manipulação direta de r.URL.Path (TrimPrefix) e validação simples
     para rejeitar paths com segmentos adicionais.
 */
+// DeleteProduct godoc
+// @Summary      Remove um produto
+// @Description  Remove um produto pelo ID (rota protegida).
+// @Tags         Products
+// @Param        id   path   string true "ID do produto"
+// @Success      204  {string} string
+// @Failure      400  {string} string
+// @Failure      401  {string} string
+// @Failure      404  {string} string
+// @Failure      500  {string} string
+// @Security     BearerAuth
+// @Router       /products/{id} [delete]
 func (h *ProductHandler) DeleteProduct(w http.ResponseWriter, r *http.Request) {
 	if _, ok := middleware.UserIDFromContext(r.Context()); !ok {
 		w.WriteHeader(http.StatusUnauthorized)

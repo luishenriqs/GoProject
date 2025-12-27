@@ -1,6 +1,6 @@
 {
   "version": "1",
-  "name": "Go API – Local",
+  "name": "Go API",
   "type": "collection",
   "ignore": [
     "node_modules",

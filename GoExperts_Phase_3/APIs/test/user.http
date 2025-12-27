@@ -1,0 +1,48 @@
+@BASE_URL = http://localhost:8000
+
+# Dica: se você quiser reexecutar várias vezes sem conflito de email,
+# troque o EMAIL manualmente ou use um alias diferente.
+@EMAIL = soso@example.com
+@PASSWORD = 123456
+
+###
+# 1) CREATE USER
+POST {{BASE_URL}}/users HTTP/1.1
+content-type: application/json
+
+{
+  "name": "Sorahia",
+  "email": "{{EMAIL}}",
+  "password": "{{PASSWORD}}"
+}
+
+###
+# 2) LOGIN (captura access_token e salva em {{TOKEN}})
+# @name login
+POST {{BASE_URL}}/login HTTP/1.1
+content-type: application/json
+
+{
+  "email": "{{EMAIL}}",
+  "password": "{{PASSWORD}}"
+}
+
+###
+# 3) GET CURRENT USER (ME)
+GET {{BASE_URL}}/users/me HTTP/1.1
+authorization: Bearer {{login.response.body.access_token}}
+
+###
+# 4) UPDATE CURRENT USER (ME)
+PUT {{BASE_URL}}/users/me HTTP/1.1
+authorization: Bearer {{login.response.body.access_token}}
+content-type: application/json
+
+{
+  "name": "Sorahia Pereira"
+}
+
+###
+# 5) DELETE CURRENT USER (ME) (rode só quando quiser apagar)
+DELETE {{BASE_URL}}/users/me HTTP/1.1
+authorization: Bearer {{login.response.body.access_token}}

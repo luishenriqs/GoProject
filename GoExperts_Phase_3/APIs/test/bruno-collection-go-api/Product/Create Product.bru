@@ -1,11 +1,11 @@
 meta {
-  name: Create User
+  name: Create Product
   type: http
   seq: 1
 }
 
 post {
-  url: {{BASE_URL}}/users
+  url: {{BASE_URL}}/products
   body: json
   auth: inherit
 }
@@ -16,9 +16,8 @@ headers {
 
 body:json {
   {
-    "name": "Luís Henrique",
-    "email": "luis@example.com",
-    "password": "123456"
+    "name": "Switch KVM",
+    "price": 129.90
   }
 }
 

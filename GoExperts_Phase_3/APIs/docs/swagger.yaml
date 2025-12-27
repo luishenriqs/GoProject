@@ -1,0 +1,417 @@
+basePath: /
+definitions:
+  dto.CreateProductInput:
+    properties:
+      name:
+        type: string
+      price:
+        type: number
+    type: object
+  dto.CreateUserInput:
+    properties:
+      email:
+        type: string
+      name:
+        type: string
+      password:
+        type: string
+    type: object
+  dto.LoginInput:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    type: object
+  dto.UpdateProductInput:
+    properties:
+      name:
+        type: string
+      price:
+        type: number
+    type: object
+  dto.UpdateUserInput:
+    properties:
+      name:
+        type: string
+      password:
+        type: string
+    type: object
+  entity.Product:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      price:
+        type: number
+    type: object
+  handlers.userResponse:
+    properties:
+      email:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+    type: object
+info:
+  contact: {}
+  description: API de estudos (Users e Products) usando net/http, GORM e JWT.
+  title: Go Experts API
+  version: "1.0"
+paths:
+  /login:
+    post:
+      consumes:
+      - application/json
+      description: Valida credenciais e retorna um access_token JWT.
+      parameters:
+      - description: Credenciais
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.LoginInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Autentica e retorna um JWT
+      tags:
+      - Auth
+  /products:
+    get:
+      description: Lista produtos com paginação e ordenação via query string.
+      parameters:
+      - description: Número da página
+        in: query
+        name: page
+        type: integer
+      - description: Itens por página
+        in: query
+        name: limit
+        type: integer
+      - description: Ordenação (asc|desc)
+        in: query
+        name: sort
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Lista produtos (paginado)
+      tags:
+      - Products
+    post:
+      consumes:
+      - application/json
+      description: Cria um produto (rota protegida).
+      parameters:
+      - description: Dados do produto
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateProductInput'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/entity.Product'
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Cria um produto
+      tags:
+      - Products
+  /products/{id}:
+    delete:
+      description: Remove um produto pelo ID (rota protegida).
+      parameters:
+      - description: ID do produto
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Remove um produto
+      tags:
+      - Products
+    get:
+      description: Retorna um produto pelo ID (rota protegida).
+      parameters:
+      - description: ID do produto
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/entity.Product'
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Busca produto por ID
+      tags:
+      - Products
+    put:
+      consumes:
+      - application/json
+      description: Atualiza parcialmente um produto pelo ID (rota protegida).
+      parameters:
+      - description: ID do produto
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Campos para atualização
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateProductInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/entity.Product'
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Atualiza um produto
+      tags:
+      - Products
+  /users:
+    post:
+      consumes:
+      - application/json
+      description: Registra um usuário com nome, email e senha. Retorna o usuário
+        (sem password).
+      parameters:
+      - description: Dados do usuário
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateUserInput'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/handlers.userResponse'
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Cria um novo usuário
+      tags:
+      - Users
+  /users/me:
+    delete:
+      description: Remove o usuário autenticado (rota protegida).
+      responses:
+        "204":
+          description: No Content
+          schema:
+            type: string
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Remove o usuário autenticado
+      tags:
+      - Users
+    get:
+      description: Obtém os dados públicos do usuário autenticado com base no token
+        JWT (claim "sub").
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.userResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Retorna o usuário autenticado
+      tags:
+      - Users
+    put:
+      consumes:
+      - application/json
+      description: Atualiza parcialmente os dados do usuário autenticado (rota protegida).
+      parameters:
+      - description: Campos para atualização
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateUserInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.userResponse'
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Atualiza o usuário autenticado
+      tags:
+      - Users
+securityDefinitions:
+  BearerAuth:
+    description: 'Informe: Bearer {seu_token}'
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

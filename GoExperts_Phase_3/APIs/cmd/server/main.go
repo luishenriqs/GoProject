@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/glebarez/sqlite"
+	chimw "github.com/go-chi/chi/v5/middleware"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 
@@ -16,12 +17,26 @@ import (
 	"github.com/luishenriqs/GoProject/GoExperts_Phase_3/APIs/infra/database"
 	"github.com/luishenriqs/GoProject/GoExperts_Phase_3/APIs/internal/entity"
 	"github.com/luishenriqs/GoProject/GoExperts_Phase_3/APIs/internal/usecase"
+
+	_ "github.com/luishenriqs/GoProject/GoExperts_Phase_3/APIs/docs"
+	httpSwagger "github.com/swaggo/http-swagger/v2"
 )
+
+// @title           Go Experts API
+// @version         1.0
+// @description     API de estudos (Users e Products) usando net/http, GORM e JWT.
+// @BasePath        /
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
+// @description Informe: Bearer {seu_token}
+
+//go:generate swag init -g main.go -o ../../docs -d .,../../api,../../internal/dto,../../internal/entity,../../internal/usecase,../../infra/database,../../pkg/entity,../../configs --parseDependency --parseInternal
 
 /*
 main é o ponto de entrada da aplicação HTTP. Ele carrega as configurações, inicializa
 a infraestrutura (banco e migrações), monta as dependências (repositórios, use cases e handlers),
-configura as rotas HTTP no mux e inicia o servidor.
+configura as rotas HTTP no mux, envolve o mux com middleware de logging e inicia o servidor.
 
 Fluxo:
  1. Carrega as configurações da aplicação via configs.LoadConfig(".").
@@ -48,12 +63,14 @@ Fluxo:
  9. Define a porta do servidor:
     - Usa cfg.WebServerPort; se estiver vazio após trim, usa "8000" como padrão.
 
-10) Inicia o servidor HTTP com http.ListenAndServe(":"+port, mux).
+10. Envolve o mux com o middleware chimw.Logger(mux) para registrar cada requisição HTTP.
+11. Inicia o servidor HTTP com http.ListenAndServe(":"+port, loggedMux).
   - Se falhar, encerra o processo com log.Fatal.
 
 Dependências/efeitos colaterais:
   - Lê configurações do ambiente/arquivos conforme implementação de configs.LoadConfig.
   - Abre conexão com o banco e executa migrações (cria/ajusta tabelas).
+  - Registra logs de requisições HTTP (método, path, status, duração) via chimw.Logger.
   - Inicia um servidor HTTP escutando na porta configurada, bloqueando a execução até erro/finalização.
 
 Retorno:
@@ -149,6 +166,12 @@ func main() {
 	// Cria o mux principal via api.NewMux
 	mux := api.NewMux(cfg.TokenAuth, userRoutes, productRoutes)
 
+	// Registra a rota do Swagger no mux
+	mux.HandleFunc("/swagger/", httpSwagger.WrapHandler)
+
+	// Envolve o mux com o middleware chimw.Logger(mux) para registrar cada requisição HTTP.
+	loggedMux := chimw.Logger(mux)
+
 	// Define a porta do servidor
 	port := cfg.WebServerPort
 	if strings.TrimSpace(port) == "" {
@@ -158,7 +181,7 @@ func main() {
 	log.Printf("listening on :%s", port)
 
 	// Inicia o servidor HTTP com http.ListenAndServe
-	if err := http.ListenAndServe(":"+port, mux); err != nil {
+	if err := http.ListenAndServe(":"+port, loggedMux); err != nil {
 		log.Fatal(err)
 	}
 }

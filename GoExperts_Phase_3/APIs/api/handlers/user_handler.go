@@ -109,6 +109,17 @@ Efeitos colaterais:
   - Lê r.Body para decodificar o payload.
   - Persiste o usuário via camada de caso de uso/repositório.
 */
+// CreateUser godoc
+// @Summary      Cria um novo usuário
+// @Description  Registra um usuário com nome, email e senha. Retorna o usuário (sem password).
+// @Tags         Users
+// @Accept       json
+// @Produce      json
+// @Param        body body dto.CreateUserInput true "Dados do usuário"
+// @Success      201 {object} userResponse
+// @Failure      400 {string} string
+// @Failure      500 {string} string
+// @Router       /users [post]
 func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 	var input dto.CreateUserInput
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
@@ -169,6 +180,18 @@ Efeitos colaterais:
   - Lê r.Body para decodificar o payload.
   - Emite um JWT usando TokenAuth, com expiração baseada em JWTExpiresIn.
 */
+// Login godoc
+// @Summary      Autentica e retorna um JWT
+// @Description  Valida credenciais e retorna um access_token JWT.
+// @Tags         Auth
+// @Accept       json
+// @Produce      json
+// @Param        body body dto.LoginInput true "Credenciais"
+// @Success      200 {object} map[string]string
+// @Failure      400 {string} string
+// @Failure      401 {string} string
+// @Failure      500 {string} string
+// @Router       /login [post]
 func (h *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 	var input dto.LoginInput
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
@@ -233,6 +256,17 @@ Respostas HTTP:
 Dependências:
   - middleware.UserIDFromContext para extrair o ID do usuário autenticado do contexto.
 */
+// GetMe godoc
+// @Summary      Retorna o usuário autenticado
+// @Description  Obtém os dados públicos do usuário autenticado com base no token JWT (claim "sub").
+// @Tags         Users
+// @Produce      json
+// @Success      200 {object} userResponse
+// @Failure      401 {string} string
+// @Failure      404 {string} string
+// @Failure      500 {string} string
+// @Security     BearerAuth
+// @Router       /users/me [get]
 func (h *UserHandler) GetMe(w http.ResponseWriter, r *http.Request) {
 	userID, ok := middleware.UserIDFromContext(r.Context())
 	if !ok {
@@ -287,6 +321,20 @@ Respostas HTTP:
 Dependências:
   - middleware.UserIDFromContext para extrair o ID do usuário autenticado do contexto.
 */
+// UpdateMe godoc
+// @Summary      Atualiza o usuário autenticado
+// @Description  Atualiza parcialmente os dados do usuário autenticado (rota protegida).
+// @Tags         Users
+// @Accept       json
+// @Produce      json
+// @Param        body body dto.UpdateUserInput true "Campos para atualização"
+// @Success      200 {object} userResponse
+// @Failure      400 {string} string
+// @Failure      401 {string} string
+// @Failure      404 {string} string
+// @Failure      500 {string} string
+// @Security     BearerAuth
+// @Router       /users/me [put]
 func (h *UserHandler) UpdateMe(w http.ResponseWriter, r *http.Request) {
 	userID, ok := middleware.UserIDFromContext(r.Context())
 	if !ok {
@@ -344,6 +392,16 @@ Respostas HTTP:
 Dependências:
   - middleware.UserIDFromContext para extrair o ID do usuário autenticado do contexto.
 */
+// DeleteMe godoc
+// @Summary      Remove o usuário autenticado
+// @Description  Remove o usuário autenticado (rota protegida).
+// @Tags         Users
+// @Success      204 {string} string
+// @Failure      401 {string} string
+// @Failure      404 {string} string
+// @Failure      500 {string} string
+// @Security     BearerAuth
+// @Router       /users/me [delete]
 func (h *UserHandler) DeleteMe(w http.ResponseWriter, r *http.Request) {
 	userID, ok := middleware.UserIDFromContext(r.Context())
 	if !ok {

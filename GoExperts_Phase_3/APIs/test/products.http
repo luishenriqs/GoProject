@@ -1,0 +1,47 @@
+@BASE_URL = http://localhost:8000
+@TOKEN = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NjY3NTQwMTMsInN1YiI6IjUyZjZkNDJiLTQ1OWEtNDFiYi05MDNkLTllMzI5YmQ1ZTY3NCJ9.33t7vYobzK2RZyZVeXYmUTe-trqE30BSRRfxUdFueYg
+
+@PRODUCT_ID_GET = 6230c632-1466-471f-a025-ebcdcfa3123a
+@PRODUCT_ID_PUT = 93ace488-f90b-424b-908e-d471834fecde
+@PRODUCT_ID_DELETE = 7b22fb3e-3207-49ad-a5f1-156b38faceb3
+
+@PAGE = 1
+@LIMIT = 10
+@SORT = desc
+
+###
+# 1) CREATE PRODUCT
+POST {{BASE_URL}}/products HTTP/1.1
+authorization: Bearer {{TOKEN}}
+content-type: application/json
+
+{
+  "name": "New Keyboard",
+  "price": 89.90
+}
+
+###
+# 2) LIST PRODUCTS (paginated)
+GET {{BASE_URL}}/products?page={{PAGE}}&limit={{LIMIT}}&sort={{SORT}} HTTP/1.1
+authorization: Bearer {{TOKEN}}
+
+###
+# 3) GET PRODUCT BY ID
+GET {{BASE_URL}}/products/{{PRODUCT_ID_GET}} HTTP/1.1
+authorization: Bearer {{TOKEN}}
+
+###
+# 4) UPDATE PRODUCT
+PUT {{BASE_URL}}/products/{{PRODUCT_ID_PUT}} HTTP/1.1
+authorization: Bearer {{TOKEN}}
+content-type: application/json
+
+{
+  "name": "New Keyboard",
+  "price": 89.90
+}
+
+###
+# 5) DELETE PRODUCT
+DELETE {{BASE_URL}}/products/{{PRODUCT_ID_DELETE}} HTTP/1.1
+authorization: Bearer {{TOKEN}}

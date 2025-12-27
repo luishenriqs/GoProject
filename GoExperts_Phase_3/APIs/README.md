@@ -1,12 +1,14 @@
-# Api_GO_Guide
+# GO API — README (Documentação Viva)
 
-Data de referência: **2025-12-24** (fuso **Brasília / America/Sao_Paulo**)  
+Última atualização: **2025-12-26** (fuso **Brasília / America/Sao_Paulo**)  
+Versão da documentação: **V6**  
+Código validado contra: `<CODE_HASH_V6>` *(substituir pelo output de `git rev-parse --short HEAD`)*  
+Validação: `go test ./...` — **A PREENCHER** *(executar e preencher nesta data)*  
+
 Módulo Go: `github.com/luishenriqs/GoProject/GoExperts_Phase_3/APIs`
 
-Este documento é o **retrato fiel da API na versão final**, após a execução integral do plano de ação.
-Esta versão **V5** mantém a robustez/escopo da V4 e corrige inconsistências editoriais internas (referências de versão) e a sintaxe do diagrama Mermaid para renderização garantida.  
-Ele consolida e substitui os documentos anteriores (estado inicial, plano, resumos e manual) como **documentação final** desta API. Em caso de divergência pontual, o **código do repositório** é a referência máxima, e este documento deve ser atualizado para manter aderência.
-
+Este README descreve o **estado atual** do código e serve como referência **acadêmica** e **operacional**.
+O **rastro histórico** de mudanças (o que foi adicionado/alterado e quando) deve ser registrado em `CHANGELOG.md`.
 ---
 
 ## 1) Escopo e princípios fixos
@@ -19,7 +21,7 @@ Ele consolida e substitui os documentos anteriores (estado inicial, plano, resum
 - CRUD completo para `Product` e endpoints “me” para `User`.
 
 ### Princípios de implementação (acadêmicos)
-- **Go puro (`net/http`)**: sem frameworks/routers (Gin/Chi/Echo etc.).
+- **Go puro (`net/http`)**: roteamento com **`http.ServeMux`**; bibliotecas auxiliares são aceitas apenas para funcionalidades transversais (JWT, Logging, Swagger), desde que permaneçam compatíveis com `http.Handler` e não substituam o roteamento.
 - Rotas com **`http.ServeMux`**.
 - Persistência via **GORM**.
 - **SQLite** para dev/test e E2E.
@@ -416,9 +418,54 @@ find . -maxdepth 4 -type f | sort
 
 ---
 
-## 8) Como executar
+## 8) DX & Tooling
 
-### 8.1 `.env` (exemplo)
+### 8.1 Makefile (execução padronizada)
+
+O projeto adota **Makefile como caminho principal** para execução local, padronizando geração de Swagger, testes e run do servidor.
+
+Targets relevantes (ver `Makefile`):
+
+- `make dev`: pipeline padrão (**swagger → tests → run**).
+- `make dev-fast`: pipeline rápido (**tests → run**) sem regenerar Swagger (use apenas se `docs/` já estiver atualizado).
+- `make run`: roda o servidor (assume pré-requisitos já prontos).
+- `make swagger`: gera/atualiza artefatos do Swagger em `docs/` (via `go generate`).
+- `make test`: executa `go test ./...`.
+- `make fmt`: formata o código (`go fmt ./...`).
+- `make clean-swagger`: remove `docs/` (use apenas antes de regenerar, se necessário).
+
+### 8.2 Swagger (documentação automática)
+
+- **UI**: `GET /swagger/index.html`
+- **JSON (OpenAPI)**: `GET /swagger/doc.json`
+- Artefatos gerados/atualizados em `docs/`:
+  - `docs/docs.go`
+  - `docs/swagger.json`
+  - `docs/swagger.yaml`
+
+
+A pasta `docs/` é gerada pelo `swag` e contém os artefatos necessários para o Swagger. O fluxo recomendado é sempre usar `make swagger` (ou `make dev`) para manter `docs/` sincronizado.
+
+### 8.3 Testes manuais (Bruno e VS Code)
+
+- **Bruno (coleção local)**: a coleção oficial de testes manuais fica em `test/bruno-collection-go-api/`.
+- **VS Code (.http / REST Client)**: requests prontas para executar localmente em `test/user.http` e `test/product.http` (requer a extensão *REST Client*).
+
+### 8.4 Política de versionamento do Swagger (`docs/`)
+
+Política adotada (projeto pessoal, sem CI/CD):
+
+- `docs/` **DEVE ser versionada**.
+- Sempre que houver alteração que impacte rotas, payloads ou descrições do Swagger:
+  1) execute `make swagger` (ou `make dev`),  
+  2) confirme que `docs/swagger.json` e `docs/docs.go` foram atualizados,  
+  3) commite os artefatos de `docs/` junto com a mudança.
+
+Observação: `make clean-swagger` deve ser usado somente quando houver necessidade de “reset” antes de regenerar (ex.: artefatos inconsistentes).
+
+## 9) Como executar
+
+### 9.1 `.env` (exemplo)
 ```env
 DB_DRIVER=mysql
 DB_HOST=localhost
@@ -431,13 +478,13 @@ JWT_SECRET=secret
 JWT_EXPIRESIN=300
 ```
 
-### 8.2 Subir MySQL (opcional, runtime)
+### 9.2 Subir MySQL (opcional, runtime)
 Na raiz do módulo:
 ```bash
 docker compose up -d
 ```
 
-### 8.3 Rodar servidor
+### 9.3 Rodar servidor
 Na raiz do módulo:
 ```bash
 go run ./cmd/server
@@ -445,15 +492,15 @@ go run ./cmd/server
 
 ---
 
-## 9) Como testar
+## 10) Como testar
 
-### 9.1 Testes (tudo)
+### 10.1 Testes (tudo)
 Na raiz do módulo:
 ```bash
 go test ./...
 ```
 
-### 9.2 Observação sobre E2E (arquivo em `APIs/test/e2e_test.go`)
+### 10.2 Observação sobre E2E (arquivo em `APIs/test/e2e_test.go`)
 O E2E usa:
 - SQLite em memória
 - `httptest.NewServer(mux)`
@@ -461,7 +508,7 @@ O E2E usa:
 
 ---
 
-## 10) Diagnósticos e “gotchas” (evitar regressões)
+## 11) Diagnósticos e “gotchas” (evitar regressões)
 
 1. **ServeMux puro não roteia por método (e por isso você precisa de `switch r.Method`)**  
    No `net/http`, o `ServeMux` faz o *match* apenas por **path** (ex: `/products`), não por **(método, path)**.  
@@ -482,7 +529,7 @@ O E2E usa:
 
 ---
 
-## 11) Exemplos rápidos (curl)
+## 12) Exemplos rápidos (curl)
 
 ### Criar usuário
 ```bash
@@ -508,7 +555,20 @@ curl -i -X POST http://localhost:8000/products   -H "Content-Type: application/j
 
 ---
 
-## 12) Status final (sanidade)
+## 13) Status final
+
+### 13.1 Snapshot V6 (2025-12-26 — **a preencher**)
+
+- Código validado contra: `<CODE_HASH_V6>` *(substituir pelo output de `git rev-parse --short HEAD`)*
+- Testes: `go test ./...` — **A PREENCHER**
+- Execução recomendada: `make dev` (swagger → tests → run)
+- Swagger UI: `/swagger/index.html`
+
+---
+
+### 13.2 Snapshot V5 (2025-12-24 — referência histórica)
+
+ (sanidade)
 
 - `go test ./...` **PASS** (camadas + handlers + middleware + E2E)
 - Rotas centralizadas via `ServeMux`

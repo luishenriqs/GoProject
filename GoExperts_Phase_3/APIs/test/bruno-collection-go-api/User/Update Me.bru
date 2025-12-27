@@ -1,19 +1,22 @@
 meta {
-  name: Update Product
+  name: Update Me
   type: http
   seq: 4
 }
 
 put {
-  url: {{BASE_URL}}/products/93ace488-f90b-424b-908e-d471834fecde
+  url: {{BASE_URL}}/users/me
   body: json
   auth: inherit
 }
 
+headers {
+  Content-Type: application/json
+}
+
 body:json {
   {
-    "name": "New Keyboard",
-    "price": 150
+    "name": "Luís Updated"
   }
 }
 
