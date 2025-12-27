@@ -39,7 +39,7 @@ authorization: Bearer {{login.response.body.access_token}}
 content-type: application/json
 
 {
-  "name": "Sorahia Pereira"
+  "name": "Soso Pereira"
 }
 
 ###
