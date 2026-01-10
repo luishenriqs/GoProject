@@ -5,27 +5,22 @@ import "slices"
 import "errors"
 
 /*
-Package events implementa um mecanismo simples de despacho de eventos (Event Dispatcher) baseado no padrão
-Observer/Pub-Sub, permitindo desacoplar o ponto que dispara um evento das operações que reagem a ele.
+Event Dispatcher (Observer Pattern) — Visão Geral
 
-Este arquivo define o EventDispatcher, responsável por manter o registro de handlers (EventHandlerInterface)
-associados a um nome de evento (eventName). Internamente, o dispatcher utiliza um map onde a chave é o nome
-do evento e o valor é uma lista de handlers registrados para aquele evento.
+Este arquivo implementa um "Event Dispatcher" simples para o pacote `events`, seguindo
+um padrão semelhante ao Observer:
+- O dispatcher mantém um registro (map) de *handlers* por nome de evento.
+- Um *handler* (EventHandlerInterface) pode ser registrado para um determinado
+evento (eventName).
+- Quando um evento (EventInterface) é despachado, todos os handlers registrados
+para aquele nome são executados.
+- Também é possível remover handlers, verificar se um handler está registrado e
+limpar todos os registros.
 
-Responsabilidades principais:
-- Armazenar handlers por tipo/nome de evento.
-- Permitir o registro de múltiplos handlers para o mesmo evento.
-- Evitar registro duplicado do mesmo handler para o mesmo eventName, retornando o erro
-  ErrHandlerAlreadyRegistered quando uma duplicidade é detectada.
-
-Funções/métodos:
-- NewEventDispatcher(): cria uma instância do dispatcher com a estrutura interna inicializada.
-- (*EventDispatcher).Register(eventName, handler): registra um handler para um evento, garantindo que o
-  mesmo handler não seja adicionado duas vezes para o mesmo eventName.
-
-Observação:
-Este arquivo cobre apenas a etapa de registro de handlers. O disparo do evento (Dispatch) e operações de
-remoção/verificação/limpeza (Remove/Has/Clear) são normalmente implementados em etapas seguintes do módulo.
+Estrutura principal:
+- `EventDispatcher.handlers`: map[string][]EventHandlerInterface
+  Chave: nome do evento
+  Valor: lista de handlers associados ao evento
 */
 
 var ErrHandlerAlreadyRegistered = errors.New("handler already registered")
@@ -34,12 +29,31 @@ type EventDispatcher struct {
 	handlers map[string][]EventHandlerInterface
 }
 
+/*
+NewEventDispatcher cria uma nova instância de EventDispatcher.
+
+- Inicializa o map interno `handlers` para armazenar os handlers por nome de evento.
+- Deve ser chamado antes de usar Register/Dispatch/Remove/Has/Clear.
+*/
 func NewEventDispatcher() *EventDispatcher {
 	return &EventDispatcher{
 		handlers: make(map[string][]EventHandlerInterface),
 	}
 }
 
+/*
+Register registra um handler para um determinado nome de evento.
+
+Regras e comportamento:
+- Se já existir uma lista de handlers para o `eventName`, o método verifica se o mesmo `handler`
+  já está registrado (usando `slices.Contains`).
+- Caso já esteja registrado, retorna `ErrHandlerAlreadyRegistered`.
+- Caso contrário, adiciona o handler ao slice associado ao `eventName`.
+
+Efeito:
+- Após o registro, o handler passará a ser chamado quando `Dispatch` for executado com um evento
+  cujo `GetName()` seja igual a `eventName`.
+*/
 func (ed *EventDispatcher) Register(eventName string, handler EventHandlerInterface) error {
 	if _, ok := ed.handlers[eventName]; ok {
 		if slices.Contains(ed.handlers[eventName], handler) {
@@ -49,4 +63,80 @@ func (ed *EventDispatcher) Register(eventName string, handler EventHandlerInterf
 
 	ed.handlers[eventName] = append(ed.handlers[eventName], handler)
 	return nil
+}
+
+/*
+Dispatch executa todos os handlers registrados para o nome do evento informado.
+
+Regras e comportamento:
+- Obtém o nome do evento via `event.GetName()`.
+- Procura na estrutura interna (`handlers`) a lista de handlers registrada para esse nome.
+- Se existir, percorre a lista e chama `handler.Handle(event)` para cada handler.
+
+Observações:
+- Se não existir nenhum handler registrado para o evento, o método não executa nada e retorna `nil`.
+- A ordem de execução segue a ordem em que os handlers foram registrados (append no slice).
+*/
+func (ev *EventDispatcher) Dispatch(event EventInterface) error {
+	if handlers, ok := ev.handlers[event.GetName()]; ok {
+		for _, handler := range handlers {
+			handler.Handle(event)
+		}
+	}
+	return nil
+}
+
+/*
+Remove remove um handler associado a um determinado nome de evento.
+
+Regras e comportamento:
+- Verifica se existe entrada para `eventName` no map.
+- Se existir, percorre o slice de handlers buscando uma referência exatamente igual (`h == handler`).
+- Ao encontrar, remove o elemento do slice usando `append(slice[:i], slice[i+1:]...)`.
+- Retorna `nil` em qualquer cenário (encontrando ou não).
+
+Efeito:
+- Após a remoção, o handler não será mais executado em `Dispatch` para aquele `eventName`.
+*/
+func (ed *EventDispatcher) Remove(eventName string, handler EventHandlerInterface) error {
+	if _, ok := ed.handlers[eventName]; ok {
+		for i, h := range ed.handlers[eventName] {
+			if h == handler {
+				ed.handlers[eventName] = append(ed.handlers[eventName][:i], ed.handlers[eventName][i+1:]...)
+				return nil
+			}
+		}
+	}
+	return nil
+}
+
+/*
+Has verifica se um handler está registrado para um determinado nome de evento.
+
+Regras e comportamento:
+- Confere se existe uma lista de handlers para `eventName`.
+- Se existir, usa `slices.Contains` para checar se o `handler` está presente no slice.
+- Retorna `true` se estiver registrado; caso contrário, `false`.
+
+Uso típico:
+- Validar estado do dispatcher em testes ou fluxos de controle (ex.: antes de remover ou registrar).
+*/
+func (ed *EventDispatcher) Has(eventName string, handler EventHandlerInterface) bool {
+	if _, ok := ed.handlers[eventName]; ok {
+		if slices.Contains(ed.handlers[eventName], handler) {
+			return true
+		}
+	}
+	return false
+}
+
+/*
+Clear remove todos os handlers registrados no dispatcher.
+
+Regras e comportamento:
+- Recria o map `handlers` do zero, descartando todas as entradas anteriores.
+- Após o Clear, nenhum evento terá handlers registrados até novos `Register`.
+*/
+func (ed *EventDispatcher) Clear() {
+	ed.handlers = make(map[string][]EventHandlerInterface)
 }
