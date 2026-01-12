@@ -1,15 +1,18 @@
 package events
 
-import "time"
+import (
+	"sync"
+	"time"
+)
 
 type EventInterface interface {
 	GetName() string
 	GetDateTime() time.Time
-	GetPayload() interface{}
+	GetPayload() any
 }
 
 type EventHandlerInterface interface {
-	Handle(event EventInterface)
+	Handle(event EventInterface, wg *sync.WaitGroup)
 }
 
 type EventDispatcherInterface interface {
@@ -81,6 +84,12 @@ O ponto-chave é que cada handler:
 * não precisa saber quem mais vai executar;
 * pode ser adicionado/removido sem mudar o código que dispara o evento.
 
+**Importante (sincronização com WaitGroup):**
+na versão atual do módulo, `Handle` recebe também um `*sync.WaitGroup`.
+A responsabilidade do handler é sinalizar sua conclusão chamando `wg.Done()`.
+Isso permite que o `Dispatch` aguarde (via `wg.Wait()`) até que **todos** os handlers finalizem,
+garantindo que o disparo do evento só termine quando o conjunto de reações registradas tiver concluído.
+
 ---
 
 ### 3) Dispatcher (Gerenciador de Eventos)
@@ -95,7 +104,8 @@ O **dispatcher** (ou “event manager”) é quem controla o ciclo:
 
 ## As interfaces do módulo (`interfaces.go`)
 
-A segunda imagem mostra a base do desenho: tudo começa com três contratos (interfaces), para manter o sistema extensível e testável.
+A segunda imagem mostra a base do desenho: tudo começa com três contratos (interfaces), para manter o sistema
+extensível e testável.
 
 ```go
 package events
@@ -119,7 +129,7 @@ type EventDispatcherInterface interface {
 	Has(eventName string, handler EventHandlerInterface) bool
 	Clear() error
 }
-```
+````
 
 ### O que cada interface garante
 
@@ -130,13 +140,15 @@ type EventDispatcherInterface interface {
 
 **EventHandlerInterface**
 
-* define o formato único de uma operação reativa: `Handle(event)`;
-* mantém o dispatcher independente das operações concretas.
+* define o formato único de uma operação reativa.
+  Na versão anterior, era `Handle(event)`. Agora, o contrato inclui também `Handle(event, wg)`,
+  para permitir que o dispatcher coordene a finalização de múltiplos handlers via `sync.WaitGroup`.
 
 **EventDispatcherInterface**
 
 * define o “coração” do módulo: registrar, despachar e administrar handlers por evento;
-* permite trocar implementações (ex.: dispatcher em memória, dispatcher thread-safe, dispatcher assíncrono etc.) sem mudar o restante do sistema.
+* permite trocar implementações (ex.: dispatcher em memória, dispatcher thread-safe, dispatcher
+  assíncrono etc.) sem mudar o restante do sistema.
 
 ---
 
@@ -150,9 +162,11 @@ type EventDispatcherInterface interface {
 3. Quando `Dispatch(event)` é chamado:
 
    * o dispatcher encontra os handlers do `event.GetName()`;
-   * executa cada `Handle(event)`.
+   * executa cada `Handle(event, wg)`; e
+   * aguarda a conclusão de todos os handlers com `wg.Wait()` antes de retornar.
 
-Esse é o motivo do design ser tão útil: **você não precisa acoplar “carregar dados” com “notificar slack” e “inserir no salesforce”** no mesmo trecho de código. Você só dispara o evento.
+Esse é o motivo do design ser tão útil: **você não precisa acoplar “carregar dados” com “notificar slack”
+e “inserir no salesforce”** no mesmo trecho de código. Você só dispara o evento.
 
 ---
 

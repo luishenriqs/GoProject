@@ -1,8 +1,10 @@
 package events
 
-import "slices"
-
-import "errors"
+import (
+	"errors"
+	"slices"
+	"sync"
+)
 
 /*
 Event Dispatcher (Observer Pattern) — Visão Geral
@@ -45,14 +47,14 @@ func NewEventDispatcher() *EventDispatcher {
 Register registra um handler para um determinado nome de evento.
 
 Regras e comportamento:
-- Se já existir uma lista de handlers para o `eventName`, o método verifica se o mesmo `handler`
-  já está registrado (usando `slices.Contains`).
-- Caso já esteja registrado, retorna `ErrHandlerAlreadyRegistered`.
-- Caso contrário, adiciona o handler ao slice associado ao `eventName`.
+  - Se já existir uma lista de handlers para o `eventName`, o método verifica se o mesmo `handler`
+    já está registrado (usando `slices.Contains`).
+  - Caso já esteja registrado, retorna `ErrHandlerAlreadyRegistered`.
+  - Caso contrário, adiciona o handler ao slice associado ao `eventName`.
 
 Efeito:
-- Após o registro, o handler passará a ser chamado quando `Dispatch` for executado com um evento
-  cujo `GetName()` seja igual a `eventName`.
+  - Após o registro, o handler passará a ser chamado quando `Dispatch` for executado com um evento
+    cujo `GetName()` seja igual a `eventName`.
 */
 func (ed *EventDispatcher) Register(eventName string, handler EventHandlerInterface) error {
 	if _, ok := ed.handlers[eventName]; ok {
@@ -66,12 +68,15 @@ func (ed *EventDispatcher) Register(eventName string, handler EventHandlerInterf
 }
 
 /*
-Dispatch executa todos os handlers registrados para o nome do evento informado.
+Dispatch executa todos os handlers registrados para o nome do evento informado e
+aguarda sua conclusão via `sync.WaitGroup`.
 
 Regras e comportamento:
 - Obtém o nome do evento via `event.GetName()`.
 - Procura na estrutura interna (`handlers`) a lista de handlers registrada para esse nome.
-- Se existir, percorre a lista e chama `handler.Handle(event)` para cada handler.
+- Se existir, cria um `WaitGroup`, incrementa (`wg.Add(1)`) para cada handler e
+invoca `handler.Handle(event, wg)`.
+- Aguarda a finalização de todos os handlers com `wg.Wait()` antes de retornar.
 
 Observações:
 - Se não existir nenhum handler registrado para o evento, o método não executa nada e retorna `nil`.
@@ -79,9 +84,12 @@ Observações:
 */
 func (ev *EventDispatcher) Dispatch(event EventInterface) error {
 	if handlers, ok := ev.handlers[event.GetName()]; ok {
+		wg := &sync.WaitGroup{}
 		for _, handler := range handlers {
-			handler.Handle(event)
+			wg.Add(1)
+			handler.Handle(event, wg)
 		}
+		wg.Wait()
 	}
 	return nil
 }

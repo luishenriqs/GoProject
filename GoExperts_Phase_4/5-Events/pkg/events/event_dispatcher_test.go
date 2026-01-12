@@ -1,6 +1,7 @@
 package events
 
 import (
+	"sync"
 	"testing"
 	"time"
 
@@ -68,7 +69,7 @@ Handle é a ação executada pelo dispatcher quando um evento é despachado.
   - Este handler "real" de teste não executa nada (corpo vazio),
     sendo usado principalmente para testes de Register/Remove/Has/Clear.
 */
-func (h *TestEventHandler) Handle(event EventInterface) {
+func (h *TestEventHandler) Handle(event EventInterface, wg *sync.WaitGroup) {
 }
 
 type EventDispatcherTestSuite struct {
@@ -147,32 +148,43 @@ type MockHandler struct {
 }
 
 /*
-Handle é a implementação mockada do handler para capturar chamadas via `testify/mock`.
+Handle é a implementação mockada do handler para capturar chamadas via `testify/mock`, agora
+com suporte a sincronização via `sync.WaitGroup`.
 
-- Permite verificar se `Dispatch` realmente invoca `Handle(event)` com o evento esperado.
+- Permite verificar se `Dispatch` realmente invoca `Handle(event, wg)` com o evento esperado.
+- Finaliza a unidade de trabalho chamando `wg.Done()`, permitindo que o teste aguarde a conclusão dos handlers.
 */
-func (m *MockHandler) Handle(event EventInterface) {
+func (m *MockHandler) Handle(event EventInterface, wg *sync.WaitGroup) {
 	m.Called(event)
+	wg.Done()
 }
 
 /*
-TestEventDispacth_Dispatch valida que `Dispatch` chama o handler registrado para um evento.
+TestEventDispacth_Dispatch valida que `Dispatch` chama **todos** os handlers registrados para um evento.
 
 Cenário:
-- Cria um handler mock, configura expectativa de chamada `Handle(&suite.event)`.
-- Registra o mock para o evento.
+- Cria dois handlers mock e configura expectativa de chamada `Handle(&suite.event)` em ambos.
+- Registra os dois mocks para o mesmo nome de evento.
 - Executa `Dispatch(&suite.event)`.
-- Verifica expectativas e garante exatamente 1 chamada ao método `Handle`.
+- Verifica expectativas e garante exatamente 1 chamada ao método `Handle` em cada handler.
 */
 func (suite *EventDispatcherTestSuite) TestEventDispacth_Dispatch() {
 	eh := &MockHandler{}
 	eh.On("Handle", &suite.event)
 
+	eh2 := &MockHandler{}
+	eh2.On("Handle", &suite.event)
+
 	suite.eventDispatcher.Register(suite.event.GetName(), eh)
+	suite.eventDispatcher.Register(suite.event.GetName(), eh2)
+
 	suite.eventDispatcher.Dispatch(&suite.event)
 
 	eh.AssertExpectations(suite.T())
 	eh.AssertNumberOfCalls(suite.T(), "Handle", 1)
+
+	eh2.AssertExpectations(suite.T())
+	eh2.AssertNumberOfCalls(suite.T(), "Handle", 1)
 }
 
 /*
