@@ -129,6 +129,12 @@ autobind:
 # modelgen, the others will be allowed when binding to fields. Configure them to
 # your liking
 models:
+  Category:
+    model:
+      - github.com/luishenriqs/GoProject/GoExperts_Phase_5/1-GraphQL/graph/model.Category
+  Course:
+    model:
+      - github.com/luishenriqs/GoProject/GoExperts_Phase_5/1-GraphQL/graph/model.Course
   ID:
     model:
       - github.com/99designs/gqlgen/graphql.ID

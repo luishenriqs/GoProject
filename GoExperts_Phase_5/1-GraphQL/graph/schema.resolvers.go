@@ -7,31 +7,75 @@ package graph
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/luishenriqs/GoProject/GoExperts_Phase_5/1-GraphQL/graph/model"
 )
 
-/*
-CreateCategory é o resolver GraphQL da mutation `createCategory`.
+// Courses é o resolver do campo "courses" dentro do tipo Category no GraphQL.
+//
+// Objetivo:
+//   - Buscar, no banco de dados, todos os cursos vinculados à categoria recebida (obj.ID).
+//   - Converter os cursos retornados pela camada de persistência para o modelo GraphQL (`*model.Course`),
+//     respeitando a tipagem esperada pelo schema.
+//
+// Parâmetros:
+// - ctx: contexto da requisição GraphQL (cancelamento, deadlines e valores associados).
+// - obj: categoria GraphQL que está sendo resolvida; o campo `obj.ID` é usado como filtro (category_id).
+//
+// Retorno:
+//   - ([]*model.Course, error): lista de cursos da categoria (cada item como ponteiro para `model.Course`)
+//     ou um erro caso a busca/conversão falhe.
+func (r *categoryResolver) Courses(ctx context.Context, obj *model.Category) ([]*model.Course, error) {
+	courses, err := r.CourseDB.FindByCategoryID(obj.ID)
+	if err != nil {
+		return nil, err
+	}
 
-Responsabilidade:
-- Receber o input `model.NewCategory` vindo da camada GraphQL.
-- Persistir a categoria no banco via `r.CategoryDB.Create(...)`.
-- Converter o resultado do banco para o tipo GraphQL `model.Category`, garantindo o ponteiro para `Description`.
+	var coursesModel []*model.Course
+	for _, course := range courses {
+		coursesModel = append(coursesModel, &model.Course{
+			ID:          course.ID,
+			Name:        course.Name,
+			Description: &course.Description,
+		})
+	}
 
-Parâmetros:
-- ctx: contexto da requisição (cancelamento, deadline e valores de request).
-- input: dados da nova categoria (Name obrigatório; Description opcional via ponteiro).
+	return coursesModel, nil
+}
 
-Retorno:
-- *model.Category: categoria criada no formato esperado pelo schema GraphQL.
-- error: erro de persistência/execução caso ocorra; em caso de sucesso, nil.
+// Category is the resolver for the category field.
+// Category is the resolver for the category field.
+func (r *courseResolver) Category(ctx context.Context, obj *model.Course) (*model.Category, error) {
+	category, err := r.CategoryDB.FindByCourseID(obj.ID)
+	if err != nil {
+		return nil, err
+	}
 
-Observações:
-- O campo `input.Description` é ponteiro; ao desreferenciar (`*input.Description`), é necessário garantir que não seja nil.
-- A variável local `Category` guarda o retorno do banco e é mapeada para o modelo GraphQL.
-*/
+	return &model.Category{
+		ID:          category.ID,
+		Name:        category.Name,
+		Description: &category.Description,
+	}, nil
+}
+
+// CreateCategory é o resolver GraphQL da mutation `createCategory`.
+//
+// Responsabilidade:
+// - Receber o input `model.NewCategory` vindo da camada GraphQL.
+// - Persistir a categoria no banco via `r.CategoryDB.Create(...)`.
+// - Converter o resultado do banco para o tipo GraphQL `model.Category`, garantindo o ponteiro para `Description`.
+//
+// Parâmetros:
+// - ctx: contexto da requisição (cancelamento, deadline e valores de request).
+// - input: dados da nova categoria (Name obrigatório; Description opcional via ponteiro).
+//
+// Retorno:
+// - *model.Category: categoria criada no formato esperado pelo schema GraphQL.
+// - error: erro de persistência/execução caso ocorra; em caso de sucesso, nil.
+//
+// Observações:
+// - O campo `input.Description` é ponteiro; ao desreferenciar (`*input.Description`), é necessário garantir que não seja nil.
+// - A variável local `Category` guarda o retorno do banco e é mapeada para o modelo GraphQL.
 func (r *mutationResolver) CreateCategory(ctx context.Context, input model.NewCategory) (*model.Category, error) {
 	Category, err := r.CategoryDB.Create(input.Name, *input.Description)
 	if err != nil {
@@ -44,9 +88,28 @@ func (r *mutationResolver) CreateCategory(ctx context.Context, input model.NewCa
 	}, nil
 }
 
-// CreateCourse is the resolver for the createCourse field.
+// CreateCourse cria um novo Course a partir do input recebido na mutation GraphQL.
+//
+// Parâmetros:
+//   - ctx: contexto da requisição (pode carregar deadlines, cancelamento e valores da request).
+//   - input: payload da mutation contendo Name, Description e CategoryID.
+//
+// Retorno:
+//   - (*model.Course, error): retorna o Course criado no formato do GraphQL model, ou um erro caso a persistência falhe.
+//
+// Observações:
+//   - input.Description é um ponteiro (campo opcional no schema). Esta implementação assume que ele não é nil e faz dereference (*input.Description).
 func (r *mutationResolver) CreateCourse(ctx context.Context, input model.NewCourse) (*model.Course, error) {
-	panic(fmt.Errorf("not implemented: CreateCourse - createCourse"))
+	course, err := r.CourseDB.Create(input.Name, *input.Description, input.CategoryID)
+	if err != nil {
+		return nil, err
+	}
+
+	return &model.Course{
+		ID:          course.ID,
+		Name:        course.Name,
+		Description: &course.Description,
+	}, nil
 }
 
 // Categories is the resolver for the categories field.
@@ -68,10 +131,36 @@ func (r *queryResolver) Categories(ctx context.Context) ([]*model.Category, erro
 	return categoriesModel, nil
 }
 
-// Courses is the resolver for the courses field.
+// Courses é o resolver responsável pelo campo "courses" do tipo Query no schema GraphQL.
+//
+// Parâmetros:
+// - ctx: contexto da requisição, utilizado para propagação de cancelamento, deadlines e valores associados.
+//
+// Retorno:
+// - ([]*model.Course, error): lista de cursos no formato do model GraphQL e erro caso ocorra falha ao buscar ou mapear os dados.
 func (r *queryResolver) Courses(ctx context.Context) ([]*model.Course, error) {
-	panic(fmt.Errorf("not implemented: Courses - courses"))
+	courses, err := r.CourseDB.FindAll()
+	if err != nil {
+		return nil, err
+	}
+
+	var coursesModel []*model.Course
+	for _, course := range courses {
+		coursesModel = append(coursesModel, &model.Course{
+			ID:          course.ID,
+			Name:        course.Name,
+			Description: &course.Description,
+		})
+	}
+
+	return coursesModel, nil
 }
+
+// Category returns CategoryResolver implementation.
+func (r *Resolver) Category() CategoryResolver { return &categoryResolver{r} }
+
+// Course returns CourseResolver implementation.
+func (r *Resolver) Course() CourseResolver { return &courseResolver{r} }
 
 // Mutation returns MutationResolver implementation.
 func (r *Resolver) Mutation() MutationResolver { return &mutationResolver{r} }
@@ -79,5 +168,7 @@ func (r *Resolver) Mutation() MutationResolver { return &mutationResolver{r} }
 // Query returns QueryResolver implementation.
 func (r *Resolver) Query() QueryResolver { return &queryResolver{r} }
 
+type categoryResolver struct{ *Resolver }
+type courseResolver struct{ *Resolver }
 type mutationResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }
