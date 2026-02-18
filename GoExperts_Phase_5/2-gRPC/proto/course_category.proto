@@ -1,0 +1,48 @@
+syntax = "proto3";
+
+package pb;
+
+option go_package = "internal/pb";
+
+// Blank message
+message Blank{}
+
+// Category representa uma categoria de curso.
+message Category {
+  // Identificador único da categoria.
+  string id = 1;
+
+  // Nome da categoria.
+  string name = 2;
+
+  // Descrição da categoria.
+  string description = 3;
+}
+
+// CreateCategoryRequest representa o payload para criação de uma categoria.
+message CreateCategoryRequest {
+  // Nome da categoria.
+  string name = 1;
+
+  // Descrição da categoria.
+  string description = 2;
+}
+
+// CategoryResponse representa a resposta padrão contendo a categoria.
+message CategoryResponse {
+  // Categoria retornada pela operação.
+  Category category = 1;
+}
+
+// CategoryList retorna uma lista de categorias
+message CategoryList {
+  repeated Category categories = 1;
+}
+
+// CategoryService expõe operações relacionadas a categorias.
+service CategoryService {
+  // CreateCategory cria uma nova categoria.
+  rpc CreateCategory(CreateCategoryRequest) returns (CategoryResponse) {}
+  // ListCategories retorna lista de categorias
+  rpc ListCategories(Blank) returns (CategoryList) {}
+}
