@@ -268,6 +268,51 @@ func (x *CategoryList) GetCategories() []*Category {
 	return nil
 }
 
+// CategoryGetRequest uma categoria específica
+type CategoryGetRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CategoryGetRequest) Reset() {
+	*x = CategoryGetRequest{}
+	mi := &file_proto_course_category_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CategoryGetRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CategoryGetRequest) ProtoMessage() {}
+
+func (x *CategoryGetRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_course_category_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CategoryGetRequest.ProtoReflect.Descriptor instead.
+func (*CategoryGetRequest) Descriptor() ([]byte, []int) {
+	return file_proto_course_category_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *CategoryGetRequest) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
 var File_proto_course_category_proto protoreflect.FileDescriptor
 
 const file_proto_course_category_proto_rawDesc = "" +
@@ -286,10 +331,15 @@ const file_proto_course_category_proto_rawDesc = "" +
 	"\fCategoryList\x12,\n" +
 	"\n" +
 	"categories\x18\x01 \x03(\v2\f.pb.CategoryR\n" +
-	"categories2\x87\x01\n" +
+	"categories\"$\n" +
+	"\x12CategoryGetRequest\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id2\xdb\x02\n" +
 	"\x0fCategoryService\x12C\n" +
-	"\x0eCreateCategory\x12\x19.pb.CreateCategoryRequest\x1a\x14.pb.CategoryResponse\"\x00\x12/\n" +
-	"\x0eListCategories\x12\t.pb.Blank\x1a\x10.pb.CategoryList\"\x00B\rZ\vinternal/pbb\x06proto3"
+	"\x0eCreateCategory\x12\x19.pb.CreateCategoryRequest\x1a\x14.pb.CategoryResponse\"\x00\x12G\n" +
+	"\x14CreateCategoryStream\x12\x19.pb.CreateCategoryRequest\x1a\x10.pb.CategoryList\"\x00(\x01\x12R\n" +
+	"!CreateCategoryStreamBidirectional\x12\x19.pb.CreateCategoryRequest\x1a\f.pb.Category\"\x00(\x010\x01\x12/\n" +
+	"\x0eListCategories\x12\t.pb.Blank\x1a\x10.pb.CategoryList\"\x00\x125\n" +
+	"\vGetCategory\x12\x16.pb.CategoryGetRequest\x1a\f.pb.Category\"\x00B\rZ\vinternal/pbb\x06proto3"
 
 var (
 	file_proto_course_category_proto_rawDescOnce sync.Once
@@ -303,23 +353,30 @@ func file_proto_course_category_proto_rawDescGZIP() []byte {
 	return file_proto_course_category_proto_rawDescData
 }
 
-var file_proto_course_category_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
+var file_proto_course_category_proto_msgTypes = make([]protoimpl.MessageInfo, 6)
 var file_proto_course_category_proto_goTypes = []any{
 	(*Blank)(nil),                 // 0: pb.Blank
 	(*Category)(nil),              // 1: pb.Category
 	(*CreateCategoryRequest)(nil), // 2: pb.CreateCategoryRequest
 	(*CategoryResponse)(nil),      // 3: pb.CategoryResponse
 	(*CategoryList)(nil),          // 4: pb.CategoryList
+	(*CategoryGetRequest)(nil),    // 5: pb.CategoryGetRequest
 }
 var file_proto_course_category_proto_depIdxs = []int32{
 	1, // 0: pb.CategoryResponse.category:type_name -> pb.Category
 	1, // 1: pb.CategoryList.categories:type_name -> pb.Category
 	2, // 2: pb.CategoryService.CreateCategory:input_type -> pb.CreateCategoryRequest
-	0, // 3: pb.CategoryService.ListCategories:input_type -> pb.Blank
-	3, // 4: pb.CategoryService.CreateCategory:output_type -> pb.CategoryResponse
-	4, // 5: pb.CategoryService.ListCategories:output_type -> pb.CategoryList
-	4, // [4:6] is the sub-list for method output_type
-	2, // [2:4] is the sub-list for method input_type
+	2, // 3: pb.CategoryService.CreateCategoryStream:input_type -> pb.CreateCategoryRequest
+	2, // 4: pb.CategoryService.CreateCategoryStreamBidirectional:input_type -> pb.CreateCategoryRequest
+	0, // 5: pb.CategoryService.ListCategories:input_type -> pb.Blank
+	5, // 6: pb.CategoryService.GetCategory:input_type -> pb.CategoryGetRequest
+	3, // 7: pb.CategoryService.CreateCategory:output_type -> pb.CategoryResponse
+	4, // 8: pb.CategoryService.CreateCategoryStream:output_type -> pb.CategoryList
+	1, // 9: pb.CategoryService.CreateCategoryStreamBidirectional:output_type -> pb.Category
+	4, // 10: pb.CategoryService.ListCategories:output_type -> pb.CategoryList
+	1, // 11: pb.CategoryService.GetCategory:output_type -> pb.Category
+	7, // [7:12] is the sub-list for method output_type
+	2, // [2:7] is the sub-list for method input_type
 	2, // [2:2] is the sub-list for extension type_name
 	2, // [2:2] is the sub-list for extension extendee
 	0, // [0:2] is the sub-list for field type_name
@@ -336,7 +393,7 @@ func file_proto_course_category_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_proto_course_category_proto_rawDesc), len(file_proto_course_category_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   5,
+			NumMessages:   6,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
