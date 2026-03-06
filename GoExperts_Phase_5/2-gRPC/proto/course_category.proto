@@ -39,10 +39,21 @@ message CategoryList {
   repeated Category categories = 1;
 }
 
+// CategoryGetRequest uma categoria específica
+message CategoryGetRequest {
+  string id = 1;
+}
+
 // CategoryService expõe operações relacionadas a categorias.
 service CategoryService {
   // CreateCategory cria uma nova categoria.
   rpc CreateCategory(CreateCategoryRequest) returns (CategoryResponse) {}
+  // CreateCategoryStream cria várias categorias via stream
+  rpc CreateCategoryStream(stream CreateCategoryRequest) returns (CategoryList) {}
+  // CreateCategoryStreamBidirectional -> Stream bi-direcional
+  rpc CreateCategoryStreamBidirectional(stream CreateCategoryRequest) returns ( stream Category) {}
   // ListCategories retorna lista de categorias
   rpc ListCategories(Blank) returns (CategoryList) {}
+  // CategoryGetRequest uma categoria específica
+  rpc GetCategory(CategoryGetRequest) returns (Category) {}
 }
